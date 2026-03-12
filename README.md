@@ -54,6 +54,45 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) and select your interests.
 
+## Deploying to Vercel
+
+Vercel's serverless environment uses a read-only filesystem, so the local SQLite
+file (`file:./prisma/dev.db`) cannot be used in production. You need a hosted
+[libsql](https://docs.turso.tech) database (e.g. [Turso](https://turso.tech)).
+
+### 1 – Create a Turso database
+
+```bash
+# Install the Turso CLI
+curl -sSfL https://get.tur.so/install.sh | bash
+
+# Log in and create a database
+turso auth login
+turso db create proactivecalc
+turso db show proactivecalc   # note the URL
+turso db tokens create proactivecalc  # note the auth token
+```
+
+### 2 – Run migrations against the production database
+
+```bash
+DATABASE_URL="libsql://<db-name>-<org>.turso.io" \
+DATABASE_AUTH_TOKEN="<token>" \
+npx prisma migrate deploy
+```
+
+### 3 – Add environment variables to Vercel
+
+In your Vercel project go to **Settings → Environment Variables** and add:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | `libsql://<db-name>-<org>.turso.io` |
+| `DATABASE_AUTH_TOKEN` | your Turso auth token |
+| `OPENAI_API_KEY` | *(optional)* your OpenAI key |
+
+Redeploy after saving the variables.
+
 ## Data Model
 
 | Model | Purpose |
